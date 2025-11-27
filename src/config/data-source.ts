@@ -3,6 +3,8 @@ import { DataSource } from "typeorm";
 import { env } from "./env";
 import { User } from "@domain/entities/user.entity";
 import { Profile } from "@domain/entities/profile.entity";
+import { Routine } from "@domain/entities/routine.entity";
+import { RoutineDay } from "@domain/entities/routine-day.entity";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -13,6 +15,6 @@ export const AppDataSource = new DataSource({
   database: env.db.name,
   synchronize: env.db.sync, // true en dev, false en prod
   logging: env.db.logging,
-  entities: [User, Profile],
+  entities: [User, Profile, Routine, RoutineDay],
   migrations: [],
 });
