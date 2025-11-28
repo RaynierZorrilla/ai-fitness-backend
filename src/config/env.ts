@@ -18,7 +18,7 @@ export const env = {
 
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || "super_secret_access_key",
-    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "30m"
+    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "1h"
   },
 
   cohere: {
