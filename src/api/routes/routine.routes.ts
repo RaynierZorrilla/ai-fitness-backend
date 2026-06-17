@@ -15,4 +15,14 @@ router.get("/current", authMiddleware, (req, res, next) =>
   controller.getCurrent(req, res, next)
 );
 
+// Obtener historial de rutinas del usuario
+router.get("/history", authMiddleware, (req, res, next) =>
+  controller.history(req, res, next)
+);
+
+// Obtener detalle de una rutina del usuario
+router.get("/:id", authMiddleware, (req, res, next) =>
+  controller.getById(req, res, next)
+);
+
 export const routineRouter = router;

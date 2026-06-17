@@ -45,4 +45,34 @@ export class RoutineController {
       next(error);
     }
   }
+
+  // GET /api/routines/history
+  async history(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const routines = await routineService.getRoutineHistory(req.user.id);
+
+      return res.json({ routines });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /api/routines/:id
+  async getById(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const routine = await routineService.getRoutineById(req.user.id, req.params.id);
+
+      return res.json({ routine });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

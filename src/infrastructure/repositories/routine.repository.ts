@@ -64,4 +64,20 @@ export class RoutineRepository {
       order: { days: { position: "ASC" } },
     });
   }
+
+  async findByIdAndUserId(id: string, userId: string): Promise<Routine | null> {
+    return this.repo.findOne({
+      where: { id, userId },
+      relations: ["days"],
+      order: { days: { position: "ASC" } },
+    });
+  }
+
+  async findHistoryByUserId(userId: string): Promise<Routine[]> {
+    return this.repo.find({
+      where: { userId },
+      relations: ["days"],
+      order: { isActive: "DESC", createdAt: "DESC", days: { position: "ASC" } },
+    });
+  }
 }
