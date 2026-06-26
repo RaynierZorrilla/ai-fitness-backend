@@ -5,6 +5,8 @@ import { ProfileRepository } from "@infrastructure/repositories/profile.reposito
 import { CohereRoutineAdapter } from "@infrastructure/ai/cohere-routine.adapter";
 import { RoutineAiService } from "application/routines/routine-ai.service";
 import { RoutineService } from "application/routines/routine.service";
+import { FitnessAnalyticsRepository } from "@infrastructure/repositories/fitness-analytics.repository";
+import { FitnessAnalyticsService } from "application/analytics/fitness-analytics.service";
 
 const routineRepository = new RoutineRepository();
 const profileRepository = new ProfileRepository();
@@ -13,7 +15,13 @@ const routineAiService = new RoutineAiService(
   profileRepository,
   cohereRoutineAdapter
 );
-const routineService = new RoutineService(routineRepository, routineAiService);
+const fitnessAnalyticsRepository = new FitnessAnalyticsRepository();
+const fitnessAnalyticsService = new FitnessAnalyticsService(fitnessAnalyticsRepository);
+const routineService = new RoutineService(
+  routineRepository,
+  routineAiService,
+  fitnessAnalyticsService
+);
 
 export class RoutineController {
   // POST /api/routines/generate
@@ -41,6 +49,21 @@ export class RoutineController {
       const routine = await routineService.getCurrentRoutine(req.user.id);
 
       return res.json({ routine });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // POST /api/routines/adjust
+  async adjust(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const adjustment = await routineService.adjustRoutineForUser(req.user.id);
+
+      return res.status(201).json(adjustment);
     } catch (error) {
       next(error);
     }

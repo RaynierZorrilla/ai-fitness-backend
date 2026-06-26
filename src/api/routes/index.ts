@@ -5,6 +5,7 @@ import { profileRouter } from "./profile.routes";
 import { routineRouter } from "./routine.routes";
 import { workoutRouter } from "./workout.routes";
 import { progressRouter } from "./progress.routes";
+import { analyticsRouter } from "./analytics.routes";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use("/profile", profileRouter);
 router.use("/routines", routineRouter);
 router.use("/workouts", workoutRouter);
 router.use("/progress", progressRouter);
+router.use("/analytics", analyticsRouter);
 
 export const apiRouter = router;

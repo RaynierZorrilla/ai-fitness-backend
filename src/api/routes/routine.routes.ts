@@ -15,6 +15,11 @@ router.get("/current", authMiddleware, (req, res, next) =>
   controller.getCurrent(req, res, next)
 );
 
+// Ajustar rutina actual con IA usando profile, rutina actual y analytics
+router.post("/adjust", authMiddleware, (req, res, next) =>
+  controller.adjust(req, res, next)
+);
+
 // Obtener historial de rutinas del usuario
 router.get("/history", authMiddleware, (req, res, next) =>
   controller.history(req, res, next)

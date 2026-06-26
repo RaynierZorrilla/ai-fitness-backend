@@ -4,11 +4,13 @@ import { env } from "@config/env";
 import { AiRoutine, AiRoutineDay } from "@infrastructure/ai/cohere-routine.adapter";
 import { Routine, RoutineGoal } from "@domain/entities/routine.entity";
 import { HttpException } from "@shared/http-exception";
+import { FitnessAnalyticsService } from "../analytics/fitness-analytics.service";
 
 export class RoutineService {
   constructor(
     private readonly routineRepository: RoutineRepository,
-    private readonly routineAiService: RoutineAiService
+    private readonly routineAiService: RoutineAiService,
+    private readonly fitnessAnalyticsService: FitnessAnalyticsService
   ) {}
 
   // Genera una nueva rutina con IA, desactiva las anteriores y guarda la nueva
@@ -50,6 +52,38 @@ export class RoutineService {
     }
 
     return this.toDto(routine);
+  }
+
+  async adjustRoutineForUser(userId: string) {
+    const currentRoutine = await this.routineRepository.findActiveByUserId(userId);
+    if (!currentRoutine) {
+      throw new HttpException(404, "Routine not found");
+    }
+
+    const fitnessOverview = await this.fitnessAnalyticsService.getFitnessOverview(userId);
+    const adjustment = await this.routineAiService.adjustRoutineForUser(
+      userId,
+      currentRoutine,
+      fitnessOverview
+    );
+
+    await this.routineRepository.deactivateAllForUser(userId);
+
+    const goal = (adjustment.routine.goal ?? currentRoutine.goal) as RoutineGoal;
+    const routine = await this.routineRepository.createRoutineWithDays({
+      userId,
+      title: adjustment.routine.title,
+      description: adjustment.routine.description,
+      goal,
+      aiModel: env.cohere.modelCommand,
+      aiPromptVersion: "adjust-v1",
+      days: this.mapAiDaysToRepoDays(adjustment.routine.days),
+    });
+
+    return {
+      analysis: adjustment.analysis,
+      routine: this.toDto(routine),
+    };
   }
 
   private mapAiDaysToRepoDays(aiDays: AiRoutineDay[]) {
