@@ -35,6 +35,13 @@ const mockFitnessAnalyticsService = {
   getFitnessOverview: jest.fn(),
 };
 
+const mockNutritionService = {
+  generateMealPlanForUser: jest.fn(),
+  getCurrentMealPlan: jest.fn(),
+  getMealPlanHistory: jest.fn(),
+  getMealPlanById: jest.fn(),
+};
+
 jest.mock("@infrastructure/repositories/user.repository", () => ({
   UserRepository: jest.fn(),
 }));
@@ -59,8 +66,16 @@ jest.mock("@infrastructure/repositories/fitness-analytics.repository", () => ({
   FitnessAnalyticsRepository: jest.fn(),
 }));
 
+jest.mock("@infrastructure/repositories/nutrition.repository", () => ({
+  NutritionRepository: jest.fn(),
+}));
+
 jest.mock("@infrastructure/ai/cohere-routine.adapter", () => ({
   CohereRoutineAdapter: jest.fn(),
+}));
+
+jest.mock("@infrastructure/ai/cohere-nutrition.adapter", () => ({
+  CohereNutritionAdapter: jest.fn(),
 }));
 
 jest.mock("@infrastructure/security/password-hasher", () => ({
@@ -105,6 +120,10 @@ jest.mock("application/progress/progress-entry.service", () => ({
 
 jest.mock("application/analytics/fitness-analytics.service", () => ({
   FitnessAnalyticsService: jest.fn().mockImplementation(() => mockFitnessAnalyticsService),
+}));
+
+jest.mock("application/nutrition/nutrition.service", () => ({
+  NutritionService: jest.fn().mockImplementation(() => mockNutritionService),
 }));
 
 import { createApp } from "../../src/app";
@@ -412,6 +431,61 @@ describe("API endpoints", () => {
     expect(mockFitnessAnalyticsService.getFitnessOverview).toHaveBeenCalledWith("user-1");
     expect(response.body).toEqual(overview);
   });
+
+  it("POST /api/nutrition/generate creates a meal plan", async () => {
+    const mealPlan = buildMealPlan();
+    mockNutritionService.generateMealPlanForUser.mockResolvedValue(mealPlan);
+
+    const response = await request(app)
+      .post("/api/nutrition/generate")
+      .set(authHeader)
+      .expect(201);
+
+    expect(mockNutritionService.generateMealPlanForUser).toHaveBeenCalledWith("user-1");
+    expect(response.body).toEqual({ mealPlan });
+  });
+
+  it("GET /api/nutrition/current returns the current meal plan", async () => {
+    const mealPlan = buildMealPlan();
+    mockNutritionService.getCurrentMealPlan.mockResolvedValue(mealPlan);
+
+    const response = await request(app)
+      .get("/api/nutrition/current")
+      .set(authHeader)
+      .expect(200);
+
+    expect(mockNutritionService.getCurrentMealPlan).toHaveBeenCalledWith("user-1");
+    expect(response.body).toEqual({ mealPlan });
+  });
+
+  it("GET /api/nutrition/history returns meal plan history", async () => {
+    const mealPlans = [buildMealPlan()];
+    mockNutritionService.getMealPlanHistory.mockResolvedValue(mealPlans);
+
+    const response = await request(app)
+      .get("/api/nutrition/history")
+      .set(authHeader)
+      .expect(200);
+
+    expect(mockNutritionService.getMealPlanHistory).toHaveBeenCalledWith("user-1");
+    expect(response.body).toEqual({ mealPlans });
+  });
+
+  it("GET /api/nutrition/:id returns a meal plan owned by the user", async () => {
+    const mealPlan = buildMealPlan({ id: "meal-plan-1" });
+    mockNutritionService.getMealPlanById.mockResolvedValue(mealPlan);
+
+    const response = await request(app)
+      .get("/api/nutrition/meal-plan-1")
+      .set(authHeader)
+      .expect(200);
+
+    expect(mockNutritionService.getMealPlanById).toHaveBeenCalledWith(
+      "user-1",
+      "meal-plan-1"
+    );
+    expect(response.body).toEqual({ mealPlan });
+  });
 });
 
 function buildProfile(overrides = {}) {
@@ -475,6 +549,40 @@ function buildProgressEntry(overrides = {}) {
     legsCm: 58,
     notes: "Felt strong",
     recordedAt: "2026-06-26T10:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function buildMealPlan(overrides = {}) {
+  return {
+    id: "meal-plan-1",
+    title: "Plan nutricional para ganancia muscular",
+    description: "Plan semanal basado en rutina, progreso y adherencia.",
+    goal: "gain_muscle",
+    dailyCalories: 2800,
+    macros: {
+      proteinG: 180,
+      carbsG: 330,
+      fatsG: 80,
+    },
+    isActive: true,
+    days: [
+      {
+        id: "meal-day-1",
+        dayOfWeek: "monday",
+        position: 1,
+        meals: [
+          {
+            name: "Desayuno",
+            calories: 650,
+            proteinG: 40,
+            carbsG: 80,
+            fatsG: 18,
+            foods: ["Avena", "Huevos", "Guineo"],
+          },
+        ],
+      },
+    ],
     ...overrides,
   };
 }

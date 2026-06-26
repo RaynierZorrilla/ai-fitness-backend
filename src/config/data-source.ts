@@ -7,6 +7,8 @@ import { Routine } from "@domain/entities/routine.entity";
 import { RoutineDay } from "@domain/entities/routine-day.entity";
 import { WorkoutSession } from "@domain/entities/workout-session.entity";
 import { ProgressEntry } from "@domain/entities/progress-entry.entity";
+import { MealPlan } from "@domain/entities/meal-plan.entity";
+import { MealPlanDay } from "@domain/entities/meal-plan-day.entity";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -17,6 +19,15 @@ export const AppDataSource = new DataSource({
   database: env.db.name,
   synchronize: env.db.sync, // true en dev, false en prod
   logging: env.db.logging,
-  entities: [User, Profile, Routine, RoutineDay, WorkoutSession, ProgressEntry],
+  entities: [
+    User,
+    Profile,
+    Routine,
+    RoutineDay,
+    WorkoutSession,
+    ProgressEntry,
+    MealPlan,
+    MealPlanDay,
+  ],
   migrations: [],
 });
